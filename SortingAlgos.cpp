@@ -1,11 +1,12 @@
+#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 #include "SortingAlgos.h"
-
+#include <math.h>
 
 sf::RenderWindow window(sf::VideoMode(WINDOW_X, WINDOW_Y), "Sorting visualiser - DevBoiAgru");
 sf::Font font;
-int LIST_SIZE = 150;
+int LIST_SIZE = 250;
 
-int main(){
+int main() {
 	font.loadFromFile("assets/Roboto-Regular.ttf");
 	sf::Text listNum;
 	// Adding leading zeroes, modified from https://stackoverflow.com/questions/6143824/add-leading-zeroes-to-string-without-sprintf
@@ -22,23 +23,27 @@ int main(){
 			std::string("Shuffle"),
 			sf::Vector2f(10.f, 10.f),
 			sf::Vector2f(160.f, 70.f),
-			sf::Color(0, 0, 255), font, []() {std::shuffle(numbers.begin(), numbers.end(), randomGen); }),
+			sf::Color(0, 0, 255), font, []() {if (canClick) std::shuffle(numbers.begin(), numbers.end(), randomGen); }),
 		Button(
 			std::string("Reverse"),
 			sf::Vector2f(180.f, 10.f),
 			sf::Vector2f(160.f, 70.f),
-			sf::Color(160, 15, 78), font, []() {std::reverse(numbers.begin(), numbers.end()); }),
+			sf::Color(160, 15, 78), font, []() {if (canClick) std::reverse(numbers.begin(), numbers.end()); }),
 		Button(
 			std::string("Refresh"),
 			sf::Vector2f(WINDOW_X - 320.f, 10.f),
 			sf::Vector2f(160.f, 70.f),
 			sf::Color(127, 200, 101), font,
 			[]() {
-				numbers.clear();
-				for (int j = 1; j <= LIST_SIZE; j++) {
-					numbers.push_back(j);
-					drawRectangles(-1, j - 1, j - 2, true);
-					std::this_thread::sleep_for(std::chrono::microseconds(SORT_DELAY));
+				if (canClick) {
+					canClick = false;
+					numbers.clear();
+					for (int j = 1; j <= LIST_SIZE; j++) {
+						numbers.push_back(j);
+						HighlightRectangles(-1, j - 1, j - 2);
+						resetHighlights();
+					}
+					canClick = true;
 				}
 			}),
 		Button(
@@ -52,46 +57,48 @@ int main(){
 			sf::Vector2f(70.f, 70.f),
 			sf::Color(6, 57, 113), font,
 			[]() {
-				if (LIST_SIZE > 10)
-					LIST_SIZE -= 10;
-				else if (LIST_SIZE > 5) 
-					LIST_SIZE -=5;
+				if (canClick) {
+					if (LIST_SIZE > 10 && canClick)
+						LIST_SIZE -= 10;
+					else if (LIST_SIZE > 5 && canClick)
+						LIST_SIZE -=5;
+				}
 			}),
 		Button(
 			std::string("+"),
 			sf::Vector2f(WINDOW_X / 2 + 70, 10.f),
 			sf::Vector2f(70.f, 70.f),
-			sf::Color(44, 85, 69), font, []() {if (LIST_SIZE == 5) LIST_SIZE += 5; else LIST_SIZE += 10; }),
+			sf::Color(44, 85, 69), font, []() {if (canClick) { if (LIST_SIZE == 5) LIST_SIZE += 5; else LIST_SIZE += 10; } }),
 		Button(
 			std::string("Selection sort"),
 			sf::Vector2f(10.f, 90.f),
 			sf::Vector2f(210.f, 70.f),
-			sf::Color(215, 45, 109), font, []() {SelectionSort(numbers); }),
+			sf::Color(215, 45, 109), font, []() {if (canClick) { canClick = false; SelectionSort(numbers); canClick = true; resetHighlights();}}),
 		Button(
 			std::string("Bubble sort"),
 			sf::Vector2f(230.f, 90.f),
 			sf::Vector2f(170.f, 70.f),
-			sf::Color(0, 200, 200), font, []() {BubbleSort(numbers); }),
+			sf::Color(0, 200, 200), font, []() {if (canClick) { canClick = false; BubbleSort(numbers); canClick = true; resetHighlights();}}),
 		Button(
 			std::string("Insertion sort"),
 			sf::Vector2f(410.f, 90.f),
 			sf::Vector2f(190.f, 70.f),
-			sf::Color(150, 100, 200), font, []() {InsertionSort(numbers); }),
+			sf::Color(150, 100, 200), font, []() {if (canClick) { canClick = false; InsertionSort(numbers); canClick = true; resetHighlights(); }}),
 		Button(
 			std::string("Quick sort"),
 			sf::Vector2f(610.f, 90.f),
 			sf::Vector2f(150.f, 70.f),
-			sf::Color(215, 45, 109), font, []() {QuickSort(numbers, 0, numbers.size() -1); }),
+			sf::Color(215, 45, 109), font, []() {if (canClick) { canClick = false; QuickSort(numbers, 0, numbers.size() - 1); canClick = true; resetHighlights(); }}),
 		Button(
 			std::string("Bogo sort"),
 			sf::Vector2f(770.f, 90.f),
 			sf::Vector2f(140.f, 70.f),
-			sf::Color(137, 172, 118), font, []() {BogoSort(numbers); }),
+			sf::Color(137, 172, 118), font, []() {if (canClick) { canClick = false; BogoSort(numbers); canClick = true; resetHighlights();}}),
 		Button(
 			std::string("Stalin sort"),
 			sf::Vector2f(920.f, 90.f),
 			sf::Vector2f(150.f, 70.f),
-			sf::Color(255, 0, 0), font, []() {StalinSort(numbers); }),
+			sf::Color(255, 0, 0), font, []() {if (canClick) { canClick = false;  StalinSort(numbers); canClick = true; resetHighlights(); }}),
 	};
 
 
@@ -113,10 +120,8 @@ int main(){
 			}
 				
 		}
-		window.clear();
+		drawRectangles();
 
-		drawRectangles(-1, -1, -1, false);
-		
 		// Draw all buttons after the rectangles, so that they are always on top.
 		for (Button btn : buttons)
 			btn.draw(window);
@@ -131,7 +136,7 @@ int main(){
 
 }
 
-static void drawRectangles(int highlight1, int highlight2, int highlight3 , bool display) {
+static void drawRectangles() {
 	window.clear();
 	std::vector<sf::RectangleShape> rectList;
 	double rectWidth = (static_cast<double>(WINDOW_X) - (2 * SIDEOFFSET)) / numbers.size();
@@ -154,6 +159,4 @@ static void drawRectangles(int highlight1, int highlight2, int highlight3 , bool
 		rectList.push_back(rect);
 		window.draw(rect);
 	}
-	if (display)
-		window.display();
 }

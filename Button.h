@@ -6,7 +6,7 @@ typedef void(*ButtonClick)();
 
 class Button {
 public:
-	ButtonClick onClick = []() {};
+	ButtonClick targetFunc = []() {};
 	Button(){}
 	Button(std::string btnTxt, sf::Vector2f position, sf::Vector2f size, sf::Color btnClr,sf::Font& font, ButtonClick clickFunc) {
 		text.setString(btnTxt);
@@ -14,7 +14,7 @@ public:
 		btn.setFillColor(btnClr);
 		btn.setPosition(position);
 		btn.setSize(size);
-		onClick = clickFunc;
+		targetFunc = clickFunc;
 		
 		// Center the text inside the button
 		sf::FloatRect textSize = text.getLocalBounds();
@@ -37,6 +37,9 @@ public:
 	void draw(sf::RenderWindow &window) const{
 		window.draw(btn);
 		window.draw(text);
+	}
+	void onClick() {
+		std::thread(targetFunc).detach();
 	}
 
 private:

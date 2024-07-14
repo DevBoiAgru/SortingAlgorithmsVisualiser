@@ -1,22 +1,32 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <random>
+#include <iostream>
 #include <chrono>
 #include <thread>
 #include <algorithm>
 #include "Button.h"
 
 // CONSTANTS
-constexpr int WINDOW_X = 1920;
-constexpr int WINDOW_Y = 1080;
-constexpr int SIDEOFFSET = 50;					// Offset from the edges of the screen
-constexpr int SORT_DELAY = 1;					// Delay between sorting operations (in microseconds)
-constexpr int MAX_BOGOSORT_ITERATIONS = 2500;	// Maximum iterations allowed for bogosort
+constexpr int WINDOW_X = 1080;
+constexpr int WINDOW_Y = 720;
+constexpr int SIDEOFFSET = 50;						// Offset from the edges of the screen
+constexpr int SORT_DELAY = 1;						// Delay between sorting operations (in nanoseconds)
+constexpr int MAX_BOGOSORT_ITERATIONS = 1000000;	// Maximum iterations allowed for bogosort
+
 std::vector<int> numbers;
 std::vector<sf::RectangleShape> rectangles;
 std::default_random_engine randomGen;
 
-static void drawRectangles(int highlight1, int highlight2, int highlight3, bool display);
+int highlight1{ -1 }, highlight2{ -1 }, highlight3{ -1 };
+bool canClick{ true };
+
+static void drawRectangles();
+static void HighlightRectangles(int hl1, int hl2, int hl3) {
+	highlight1 = hl1;
+	highlight2 = hl2;
+	highlight3 = hl3;
+};
 
 // Utility functions
 int maxNumber(std::vector<int> numbers) {
@@ -34,6 +44,10 @@ void swapNums(int* n1, int* n2) {
 	*n2 = temp;
 }
 
+void resetHighlights() {
+	highlight1 = highlight2 = highlight3 = -1;
+}
+
 // Sorting algorithms
 
 bool isSorted(std::vector<int> nums){
@@ -47,9 +61,10 @@ bool isSorted(std::vector<int> nums){
 
 void Verify(std::vector<int>& nums) {
 	for (int i = 0; i < nums.size(); i++) {
-		drawRectangles(-1, -1, i, true);
-		std::this_thread::sleep_for(std::chrono::microseconds(SORT_DELAY));
+		HighlightRectangles(-1, -1, i);
+		std::this_thread::sleep_for(std::chrono::nanoseconds(SORT_DELAY));
 	}
+	return;
 }
 
 void BubbleSort(std::vector<int>& nums) {
@@ -57,11 +72,12 @@ void BubbleSort(std::vector<int>& nums) {
 		for (int j = 0; j < nums.size() - i - 1; j++) {
 			if (nums[j] > nums[j + 1])
 				swapNums(&nums[j], &nums[j + 1]);
-			drawRectangles(j, j+1, -1, true);
-			std::this_thread::sleep_for(std::chrono::microseconds(SORT_DELAY));
+			HighlightRectangles(j, j+1, -1);
+			std::this_thread::sleep_for(std::chrono::nanoseconds(SORT_DELAY));
 		}
 	}
 	Verify(nums);
+	return;
 }
 
 void InsertionSort(std::vector<int>& nums) {
@@ -72,12 +88,13 @@ void InsertionSort(std::vector<int>& nums) {
 		while (minIndex > 0 && tmpNum < nums[minIndex - 1]) {
 			nums[minIndex] = nums[minIndex - 1];
 			minIndex -= 1;
-			drawRectangles(i, minIndex, -1, true);
-			std::this_thread::sleep_for(std::chrono::microseconds(SORT_DELAY));
+			HighlightRectangles(i, minIndex, -1);
+			std::this_thread::sleep_for(std::chrono::nanoseconds(SORT_DELAY));
 		}
 		nums[minIndex] = tmpNum;
 	}
 	Verify(nums);
+	return;
 }
 
 void StalinSort(std::vector<int>& nums){
@@ -88,16 +105,17 @@ void StalinSort(std::vector<int>& nums){
 		if (*i < *j){
 			gulag.push_back(*i);
 			i = nums.erase(i);
-			drawRectangles(j - nums.begin(), i - nums.begin(), -1, true);
+			HighlightRectangles(j - nums.begin(), i - nums.begin(), -1);
 		}
 		else{
 			j = i;
 			i++;
-			drawRectangles(-1, i - nums.begin(), j - nums.begin(), true);
+			HighlightRectangles(-1, i - nums.begin(), j - nums.begin());
 		}
-		std::this_thread::sleep_for(std::chrono::microseconds(SORT_DELAY));
+		std::this_thread::sleep_for(std::chrono::nanoseconds(SORT_DELAY));
 	}
 	Verify(nums);
+	return;
 }
 
 int partition(std::vector<int>& nums, int low, int high) {
@@ -106,13 +124,13 @@ int partition(std::vector<int>& nums, int low, int high) {
 	for (int j = low; j < high; j++) {
 		if (nums[j] <= pivot) {
 			i++;
-			drawRectangles(-1, i, j, true);
+			HighlightRectangles(-1, i, j);
 			swapNums(&nums[i], &nums[j]);
 		}
 		else {
-			drawRectangles(-1, i, j, true);
+			HighlightRectangles(-1, i, j);
 		}
-		std::this_thread::sleep_for(std::chrono::microseconds(SORT_DELAY));
+		std::this_thread::sleep_for(std::chrono::nanoseconds(SORT_DELAY));
 	}
 	swapNums(&nums[i + 1], &nums[high]);
 	return (i + 1);
@@ -124,6 +142,7 @@ void QuickSort(std::vector<int>& nums, int low, int high) {
 		QuickSort(nums, low, partIndex - 1);
 		QuickSort(nums, partIndex + 1, high);
 	}
+	return;
 }
 
 void SelectionSort(std::vector<int>& nums) {
@@ -133,16 +152,18 @@ void SelectionSort(std::vector<int>& nums) {
 		for (j = i + 1; j < nums.size(); j++) {
 			if (nums[j] < nums[minId]) {
 				minId = j;
-				drawRectangles(j, i, -1, true);
+				HighlightRectangles(j, i, -1);
 			}
 			else {
-				drawRectangles(-1, i, j, true);
+				HighlightRectangles(-1, i, j);
 			}
-			std::this_thread::sleep_for(std::chrono::microseconds(SORT_DELAY));
+			std::this_thread::sleep_for(std::chrono::nanoseconds(SORT_DELAY));
 		}
 		if (minId != i)
 			swapNums(&nums[minId], &nums[i]);
 	}
+	Verify(nums);
+	return;
 }
 
 void BogoSort(std::vector<int>& nums) {
@@ -150,7 +171,6 @@ void BogoSort(std::vector<int>& nums) {
 	while (counter < MAX_BOGOSORT_ITERATIONS) {
 		if (!isSorted(nums)) {
 			std::shuffle(nums.begin(), nums.end(), randomGen);
-			drawRectangles(-1, -1, -1, true);
 			counter++;
 		}
 		else {
@@ -158,4 +178,5 @@ void BogoSort(std::vector<int>& nums) {
 			break;
 		}
 	}
+	return;
 }

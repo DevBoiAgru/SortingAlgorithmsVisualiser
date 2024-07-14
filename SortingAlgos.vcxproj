@@ -135,7 +135,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Button.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="SortingAlgos.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SortingAlgos.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\..\ \Builds\Algo.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
