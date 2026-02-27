@@ -1,18 +1,21 @@
 #pragma once
-#include <SFML/Graphics.hpp>
 #include <random>
 #include <iostream>
 #include <chrono>
 #include <thread>
 #include <algorithm>
+#include <cstring>
+#include <SFML/graphics.hpp>
 #include "Button.h"
 
 // CONSTANTS
 constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 constexpr int SIDEOFFSET = 50;						// Offset from the edges of the screen
-constexpr int SORT_DELAY = 1;						// Delay between sorting operations (in nanoseconds)
 constexpr int MAX_BOGOSORT_ITERATIONS = 1000000;	// Maximum iterations allowed for bogosort
+
+// SEMI-CONSTANT
+int SORT_DELAY = 1;						// Delay between sorting operations (in nanoseconds)
 
 std::vector<int> numbers;
 std::vector<sf::RectangleShape> rectangles;
@@ -20,6 +23,19 @@ std::default_random_engine randomGen;
 
 int highlight1{ -1 }, highlight2{ -1 }, highlight3{ -1 };
 bool canClick{ true };
+
+// Helper to check if a C string is a number
+int is_number(const char* s) {
+	if (*s == '-' || *s == '+') return 0;   // no sign please, it is understood it'll be positive only
+	if (*s == '\0') return 0;          // contrary to popular belief empty string is not a number
+
+	while (*s) {
+		if (*s < '0' || *s > '9') return 0;
+		s++;
+	}
+	return 1;
+}
+
 
 static void drawRectangles();
 static void HighlightRectangles(int hl1, int hl2, int hl3) {
@@ -105,12 +121,12 @@ void StalinSort(std::vector<int>& nums){
 		if (*i < *j){
 			gulag.push_back(*i);
 			i = nums.erase(i);
-			HighlightRectangles(j - nums.begin(), i - nums.begin(), -1);
+            HighlightRectangles(static_cast<int>(j - nums.begin()), static_cast<int>(i - nums.begin()), -1);
 		}
 		else{
 			j = i;
 			i++;
-			HighlightRectangles(-1, i - nums.begin(), j - nums.begin());
+            HighlightRectangles(-1, static_cast<int>(i - nums.begin()), static_cast<int>(j - nums.begin()));
 		}
 		std::this_thread::sleep_for(std::chrono::nanoseconds(SORT_DELAY));
 	}
